@@ -1,43 +1,43 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
       "version": "0.3.539.46024",
-      "templateHash": "17909754061864772725"
+      "templateHash": "5271833147280089448"
     }
   },
   "parameters": {
+    "AdminUserName": {
+      "type": "string"
+    },
     "AdminPassword": {
       "type": "secureString"
     },
-    "ResourceGroups": {
-      "type": "object"
+    "VirtualMacineNameOne": {
+      "type": "string",
+      "defaultValue": "JIT-VM-001"
     },
-    "JitRules": {
-      "type": "object"
+    "VirtualMacineNameTwo": {
+      "type": "string",
+      "defaultValue": "JIT-VM-002"
     },
-    "VirtualMachineOneParams": {
-      "type": "object"
+    "JitSourceIp": {
+      "type": "string",
+      "defaultValue": "73.225.95.26"
     },
-    "VirtualMachineTwoParams": {
-      "type": "object"
+    "Location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
     }
   },
   "functions": [],
   "resources": [
     {
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-01-01",
-      "name": "[parameters('ResourceGroups').ResourceGroupNameUS]",
-      "location": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
-    },
-    {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "NetworkingUS",
-      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -45,7 +45,7 @@
         "mode": "Incremental",
         "parameters": {
           "Location": {
-            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+            "value": "[parameters('Location')]"
           }
         },
         "template": {
@@ -325,16 +325,12 @@
             }
           }
         }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]"
-      ]
+      }
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "availabilitySetUS",
-      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -345,7 +341,7 @@
             "value": "aveastus"
           },
           "Location": {
-            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+            "value": "[parameters('Location')]"
           }
         },
         "template": {
@@ -389,16 +385,12 @@
             }
           }
         }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]"
-      ]
+      }
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "domainControllerUS1",
-      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -406,40 +398,40 @@
         "mode": "Incremental",
         "parameters": {
           "VMName": {
-            "value": "[parameters('VirtualMachineOneParams').VMName]"
+            "value": "[parameters('VirtualMacineNameOne')]"
           },
           "NicName": {
-            "value": "[parameters('VirtualMachineOneParams').VMName]"
+            "value": "[parameters('VirtualMacineNameOne')]"
           },
           "AdminUserName": {
-            "value": "[parameters('VirtualMachineOneParams').AdminUserName]"
+            "value": "[parameters('AdminUserName')]"
           },
           "AdminPassword": {
             "value": "[parameters('AdminPassword')]"
           },
           "VirtualMachineSize": {
-            "value": "[parameters('VirtualMachineOneParams').VirtualMachineSize]"
+            "value": "Standard_DS2_v2"
           },
           "WindowsOSVersion": {
-            "value": "[parameters('VirtualMachineOneParams').WindowsOSVersion]"
+            "value": "2022-datacenter"
           },
           "VirtualNetworkID": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.vnetID.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.vnetID.value]"
           },
           "SubnetName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.subnet.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.subnet.value]"
           },
           "AvailabilitySetID": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS'), '2019-10-01').outputs.AvailabilitySetID.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'availabilitySetUS'), '2019-10-01').outputs.AvailabilitySetID.value]"
           },
           "Location": {
-            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+            "value": "[parameters('Location')]"
           },
           "IPAddress": {
-            "value": "[parameters('VirtualMachineOneParams').PrivateIPAddress]"
+            "value": "10.0.2.4"
           },
-          "JitRules": {
-            "value": "[parameters('JitRules')]"
+          "JitSourceIP": {
+            "value": "[parameters('JitSourceIp')]"
           }
         },
         "template": {
@@ -449,15 +441,12 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.539.46024",
-              "templateHash": "12583786105079893547"
+              "templateHash": "9416807651070757071"
             }
           },
           "parameters": {
             "AdminUserName": {
               "type": "string"
-            },
-            "JitRules": {
-              "type": "object"
             },
             "AdminPassword": {
               "type": "secureString"
@@ -487,6 +476,9 @@
               "type": "string"
             },
             "AvailabilitySetID": {
+              "type": "string"
+            },
+            "JitSourceIP": {
               "type": "string"
             }
           },
@@ -573,7 +565,6 @@
               ]
             },
             {
-              "condition": "[equals(parameters('JitRules').DeployRules, 1)]",
               "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
               "apiVersion": "2020-01-01",
               "name": "[format('{0}/{1}', parameters('Location'), parameters('VMName'))]",
@@ -587,8 +578,7 @@
                         "number": 22,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       },
@@ -596,8 +586,7 @@
                         "number": 3389,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       },
@@ -605,8 +594,7 @@
                         "number": 5985,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       },
@@ -614,8 +602,7 @@
                         "number": 5986,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       }
@@ -631,16 +618,14 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]"
+        "[resourceId('Microsoft.Resources/deployments', 'availabilitySetUS')]",
+        "[resourceId('Microsoft.Resources/deployments', 'NetworkingUS')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "domainControllerUS2",
-      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -648,40 +633,40 @@
         "mode": "Incremental",
         "parameters": {
           "VMName": {
-            "value": "[parameters('VirtualMachineTwoParams').VMName]"
+            "value": "[parameters('VirtualMacineNameTwo')]"
           },
           "NicName": {
-            "value": "[parameters('VirtualMachineTwoParams').VMName]"
+            "value": "[parameters('VirtualMacineNameTwo')]"
           },
           "AdminUserName": {
-            "value": "[parameters('VirtualMachineTwoParams').AdminUserName]"
+            "value": "[parameters('AdminUserName')]"
           },
           "AdminPassword": {
             "value": "[parameters('AdminPassword')]"
           },
           "VirtualMachineSize": {
-            "value": "[parameters('VirtualMachineOneParams').VirtualMachineSize]"
+            "value": "Standard_DS2_v2"
           },
           "WindowsOSVersion": {
-            "value": "[parameters('VirtualMachineOneParams').WindowsOSVersion]"
+            "value": "2022-datacenter"
           },
           "VirtualNetworkID": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.vnetID.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.vnetID.value]"
           },
           "SubnetName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.subnet.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.subnet.value]"
           },
           "AvailabilitySetID": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS'), '2019-10-01').outputs.AvailabilitySetID.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'availabilitySetUS'), '2019-10-01').outputs.AvailabilitySetID.value]"
           },
           "Location": {
-            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+            "value": "[parameters('Location')]"
           },
           "IPAddress": {
-            "value": "[parameters('VirtualMachineTwoParams').PrivateIPAddress]"
+            "value": "10.0.2.5"
           },
-          "JitRules": {
-            "value": "[parameters('JitRules')]"
+          "JitSourceIP": {
+            "value": "[parameters('JitSourceIp')]"
           }
         },
         "template": {
@@ -691,15 +676,12 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.539.46024",
-              "templateHash": "12583786105079893547"
+              "templateHash": "9416807651070757071"
             }
           },
           "parameters": {
             "AdminUserName": {
               "type": "string"
-            },
-            "JitRules": {
-              "type": "object"
             },
             "AdminPassword": {
               "type": "secureString"
@@ -729,6 +711,9 @@
               "type": "string"
             },
             "AvailabilitySetID": {
+              "type": "string"
+            },
+            "JitSourceIP": {
               "type": "string"
             }
           },
@@ -815,7 +800,6 @@
               ]
             },
             {
-              "condition": "[equals(parameters('JitRules').DeployRules, 1)]",
               "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
               "apiVersion": "2020-01-01",
               "name": "[format('{0}/{1}', parameters('Location'), parameters('VMName'))]",
@@ -829,8 +813,7 @@
                         "number": 22,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       },
@@ -838,8 +821,7 @@
                         "number": 3389,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       },
@@ -847,8 +829,7 @@
                         "number": 5985,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       },
@@ -856,8 +837,7 @@
                         "number": 5986,
                         "protocol": "*",
                         "allowedSourceAddressPrefixes": [
-                          "[parameters('JitRules').JitSourceIpOne]",
-                          "[parameters('JitRules').JitSourceIpTwo]"
+                          "[parameters('JitSourceIP')]"
                         ],
                         "maxRequestAccessDuration": "PT3H"
                       }
@@ -873,10 +853,9 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'domainControllerUS1')]"
+        "[resourceId('Microsoft.Resources/deployments', 'availabilitySetUS')]",
+        "[resourceId('Microsoft.Resources/deployments', 'NetworkingUS')]",
+        "[resourceId('Microsoft.Resources/deployments', 'domainControllerUS1')]"
       ]
     }
   ]
