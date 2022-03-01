@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.539.46024",
-      "templateHash": "5271833147280089448"
+      "templateHash": "9692106612472331624"
     }
   },
   "parameters": {
@@ -25,7 +25,7 @@
     },
     "JitSourceIp": {
       "type": "string",
-      "defaultValue": "73.225.95.26"
+      "defaultValue": "192.168.0.5"
     },
     "Location": {
       "type": "string",
