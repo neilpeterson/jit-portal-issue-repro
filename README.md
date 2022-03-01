@@ -13,21 +13,21 @@ With this deployment, two virtual machines are created with the following attrib
 - A second NSG per VM is attached to the VMs NIC
 - A JIT rule is created for each VM (two in total)
 
-One complete, we can see that the two JIT rules have been created. In the below screenshot, we can see a JIT rule for both VMs (JIT-VM-001 and JIT-VM-002).
+One complete, we can see that the two JIT rules have been created. In the below screenshot, we can see a JIT rule for both VMs (**JIT-VM-001** and **JIT-VM-002**).
 
 ![](./images/jit-rules-pwsh.png)
 
-However, when navigating to the VMs through the Azure portal, only one appears to be JIT enabled (JIT-VM-001). Whereas JIT-VM-002 does not appear to be JIT enabled.
+However, when navigating to the VMs through the Azure portal, only one appears to be JIT enabled (**JIT-VM-001**). Whereas **JIT-VM-002** does not appear to be JIT enabled.
 
 ![](./images/jit-vm-portal.png)
 
-That said, when looking at networking for JIT-VM-002, we can see the JIT created rule to deny management port access. So that looks good.
+That said, when looking at networking for **JIT-VM-002**, we can see the JIT created rule to deny management port access. So that looks good.
 
 ![](./images/jit-vm-network.png)
 
-If using PowerShell against JIT-VM-002 to request JIT access, the request is successful, and the expected allow NSG rule has been created.
+If using PowerShell against **JIT-VM-002** to request JIT access, the request is successful, and the expected allow NSG rule has been created.
 
-![](./images/jit-rules-pwsh-good.png)
+![](./images/jit-rule-pwsh-good.png)
 
 And, the expected allow NSG rule has been created.
 
