@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.539.46024",
-      "templateHash": "9692106612472331624"
+      "templateHash": "4672939619491005426"
     }
   },
   "parameters": {
@@ -55,7 +55,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.539.46024",
-              "templateHash": "7099405293755076111"
+              "templateHash": "3968764096292970819"
             }
           },
           "parameters": {
@@ -153,17 +153,13 @@
                   {
                     "name": "[parameters('ResourceSubnet').subnetName]",
                     "properties": {
-                      "addressPrefix": "[parameters('ResourceSubnet').subnetPrefix]",
-                      "networkSecurityGroup": {
-                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgVirtualMachines')]"
-                      }
+                      "addressPrefix": "[parameters('ResourceSubnet').subnetPrefix]"
                     }
                   }
                 ]
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgbastion')]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgVirtualMachines')]"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgbastion')]"
               ]
             },
             {
@@ -441,7 +437,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.539.46024",
-              "templateHash": "9416807651070757071"
+              "templateHash": "9434262634012446836"
             }
           },
           "parameters": {
@@ -562,56 +558,6 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', parameters('NicName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
-              "apiVersion": "2020-01-01",
-              "name": "[format('{0}/{1}', parameters('Location'), parameters('VMName'))]",
-              "kind": "Basic",
-              "properties": {
-                "virtualMachines": [
-                  {
-                    "id": "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]",
-                    "ports": [
-                      {
-                        "number": 22,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      },
-                      {
-                        "number": 3389,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      },
-                      {
-                        "number": 5985,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      },
-                      {
-                        "number": 5986,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      }
-                    ]
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]"
               ]
             }
           ]
@@ -676,7 +622,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.539.46024",
-              "templateHash": "9416807651070757071"
+              "templateHash": "9434262634012446836"
             }
           },
           "parameters": {
@@ -797,56 +743,6 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', parameters('NicName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
-              "apiVersion": "2020-01-01",
-              "name": "[format('{0}/{1}', parameters('Location'), parameters('VMName'))]",
-              "kind": "Basic",
-              "properties": {
-                "virtualMachines": [
-                  {
-                    "id": "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]",
-                    "ports": [
-                      {
-                        "number": 22,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      },
-                      {
-                        "number": 3389,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      },
-                      {
-                        "number": 5985,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      },
-                      {
-                        "number": 5986,
-                        "protocol": "*",
-                        "allowedSourceAddressPrefixes": [
-                          "[parameters('JitSourceIP')]"
-                        ],
-                        "maxRequestAccessDuration": "PT3H"
-                      }
-                    ]
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]"
               ]
             }
           ]
