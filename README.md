@@ -2,7 +2,7 @@
 
 Use deployment button to deploy repro:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fneilpeterson%2Fjit-portal-issue-repro%main.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fneilpeterson%2Fjit-portal-issue-repro%2Fmain%2Fmain.json)
 
 # Observations
 
@@ -36,4 +36,3 @@ And, the expected allow NSG rule has been created.
 ## Conclusion
 
 So while the Azure portal does not show the VM as JIT enabled, it does appear to be. As well, the portal control for requesting access is not present. I have tested both the preview and non-preview portal, which persists across both.
-
