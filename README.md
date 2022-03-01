@@ -25,7 +25,7 @@ That said, when looking at networking for **JIT-VM-002**, we can see the JIT cre
 
 ![](./images/jit-vm-network.png)
 
-If using PowerShell against **JIT-VM-002** to request JIT access, the request is successful, and the expected allow NSG rule has been created.
+If using PowerShell against **JIT-VM-002** to request JIT access, the request is successful.
 
 ![](./images/jit-rule-pwsh-good.png)
 
@@ -35,5 +35,5 @@ And, the expected allow NSG rule has been created.
 
 ## Conclusion
 
-To me, this looks like a portal / UI bug. I have tested in both the preview and non-preview portal, and this persists across both.
+So while the Azure portal does not show the VM as JIT enabled, it does appear to be. As well, the portal control for requesting access is not present. I have tested both the preview and non-preview portal, which persists across both.
 
