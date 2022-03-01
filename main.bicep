@@ -3,7 +3,7 @@ param AdminUserName string
 param AdminPassword string
 param VirtualMacineNameOne string = 'JIT-VM-001'
 param VirtualMacineNameTwo string = 'JIT-VM-002'
-param JitSourceIp string = '73.225.95.26'
+param JitSourceIp string = '192.168.0.5'
 param Location string = resourceGroup().location
 
 module Networking './modules/networking.bicep' = {
