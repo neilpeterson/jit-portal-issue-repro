@@ -1,0 +1,883 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.539.46024",
+      "templateHash": "17909754061864772725"
+    }
+  },
+  "parameters": {
+    "AdminPassword": {
+      "type": "secureString"
+    },
+    "ResourceGroups": {
+      "type": "object"
+    },
+    "JitRules": {
+      "type": "object"
+    },
+    "VirtualMachineOneParams": {
+      "type": "object"
+    },
+    "VirtualMachineTwoParams": {
+      "type": "object"
+    }
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-01-01",
+      "name": "[parameters('ResourceGroups').ResourceGroupNameUS]",
+      "location": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "NetworkingUS",
+      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "Location": {
+            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "7099405293755076111"
+            }
+          },
+          "parameters": {
+            "Location": {
+              "type": "string"
+            },
+            "BastionHost": {
+              "type": "object",
+              "defaultValue": {
+                "name": "AzureBastionHost",
+                "publicIPAddressName": "pip-bastion",
+                "subnetName": "AzureBastionSubnet",
+                "nsgName": "nsg-spoke-bastion",
+                "subnetPrefix": "10.0.1.0/29"
+              }
+            },
+            "SpokeNetwork": {
+              "type": "object",
+              "defaultValue": {
+                "name": "vnet-spoke",
+                "addressPrefix": "10.0.0.0/20"
+              }
+            },
+            "ResourceSubnet": {
+              "type": "object",
+              "defaultValue": {
+                "subnetName": "ResourceSubnet",
+                "nsgName": "nsg-spoke-resources",
+                "subnetPrefix": "10.0.2.0/24"
+              }
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2020-08-01",
+              "name": "nsgVirtualMachines",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "bastion-in-vnet",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "sourceAddressPrefix": "[parameters('BastionHost').subnetPrefix]",
+                      "destinationPortRanges": [
+                        "22",
+                        "3389"
+                      ],
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "DenyAllInBound",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "sourceAddressPrefix": "*",
+                      "destinationPortRange": "443",
+                      "destinationAddressPrefix": "*",
+                      "access": "Deny",
+                      "priority": 1000,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('SpokeNetwork').name]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('SpokeNetwork').addressPrefix]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('BastionHost').subnetName]",
+                    "properties": {
+                      "addressPrefix": "[parameters('BastionHost').subnetPrefix]",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgbastion')]"
+                      }
+                    }
+                  },
+                  {
+                    "name": "[parameters('ResourceSubnet').subnetName]",
+                    "properties": {
+                      "addressPrefix": "[parameters('ResourceSubnet').subnetPrefix]",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgVirtualMachines')]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgbastion')]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsgVirtualMachines')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-06-01",
+              "name": "bastionpip",
+              "location": "[parameters('Location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2020-06-01",
+              "name": "nsgbastion",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "bastion-in-allow",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "sourceAddressPrefix": "Internet",
+                      "destinationPortRange": "443",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "bastion-control-in-allow",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "sourceAddressPrefix": "GatewayManager",
+                      "destinationPortRange": "443",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 120,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "bastion-in-host",
+                    "properties": {
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": [
+                        "8080",
+                        "5701"
+                      ],
+                      "sourceAddressPrefix": "VirtualNetwork",
+                      "destinationAddressPrefix": "VirtualNetwork",
+                      "access": "Allow",
+                      "priority": 130,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "bastion-vnet-out-allow",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "sourceAddressPrefix": "*",
+                      "destinationPortRanges": [
+                        "22",
+                        "3389"
+                      ],
+                      "destinationAddressPrefix": "VirtualNetwork",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Outbound"
+                    }
+                  },
+                  {
+                    "name": "bastion-azure-out-allow",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "sourceAddressPrefix": "*",
+                      "destinationPortRange": "443",
+                      "destinationAddressPrefix": "AzureCloud",
+                      "access": "Allow",
+                      "priority": 120,
+                      "direction": "Outbound"
+                    }
+                  },
+                  {
+                    "name": "bastion-out-host",
+                    "properties": {
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": [
+                        "8080",
+                        "5701"
+                      ],
+                      "sourceAddressPrefix": "VirtualNetwork",
+                      "destinationAddressPrefix": "VirtualNetwork",
+                      "access": "Allow",
+                      "priority": 130,
+                      "direction": "Outbound"
+                    }
+                  },
+                  {
+                    "name": "bastion-out-deny",
+                    "properties": {
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "*",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Deny",
+                      "priority": 1000,
+                      "direction": "Outbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2020-06-01",
+              "name": "bastionhost",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconf",
+                    "properties": {
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('SpokeNetwork').name), parameters('BastionHost').subnetName)]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'bastionpip')]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'bastionpip')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('SpokeNetwork').name)]"
+              ]
+            }
+          ],
+          "outputs": {
+            "vnetID": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('SpokeNetwork').name)]"
+            },
+            "subnet": {
+              "type": "string",
+              "value": "[parameters('ResourceSubnet').subnetName]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "availabilitySetUS",
+      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "Name": {
+            "value": "aveastus"
+          },
+          "Location": {
+            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "12070606874354273987"
+            }
+          },
+          "parameters": {
+            "Location": {
+              "type": "string"
+            },
+            "Name": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Compute/availabilitySets",
+              "apiVersion": "2020-12-01",
+              "name": "[parameters('Name')]",
+              "location": "[parameters('Location')]",
+              "sku": {
+                "name": "Aligned"
+              },
+              "properties": {
+                "platformFaultDomainCount": 2,
+                "platformUpdateDomainCount": 2
+              }
+            }
+          ],
+          "outputs": {
+            "AvailabilitySetID": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/availabilitySets', parameters('Name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "domainControllerUS1",
+      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "VMName": {
+            "value": "[parameters('VirtualMachineOneParams').VMName]"
+          },
+          "NicName": {
+            "value": "[parameters('VirtualMachineOneParams').VMName]"
+          },
+          "AdminUserName": {
+            "value": "[parameters('VirtualMachineOneParams').AdminUserName]"
+          },
+          "AdminPassword": {
+            "value": "[parameters('AdminPassword')]"
+          },
+          "VirtualMachineSize": {
+            "value": "[parameters('VirtualMachineOneParams').VirtualMachineSize]"
+          },
+          "WindowsOSVersion": {
+            "value": "[parameters('VirtualMachineOneParams').WindowsOSVersion]"
+          },
+          "VirtualNetworkID": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.vnetID.value]"
+          },
+          "SubnetName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.subnet.value]"
+          },
+          "AvailabilitySetID": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS'), '2019-10-01').outputs.AvailabilitySetID.value]"
+          },
+          "Location": {
+            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+          },
+          "IPAddress": {
+            "value": "[parameters('VirtualMachineOneParams').PrivateIPAddress]"
+          },
+          "JitRules": {
+            "value": "[parameters('JitRules')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "12583786105079893547"
+            }
+          },
+          "parameters": {
+            "AdminUserName": {
+              "type": "string"
+            },
+            "JitRules": {
+              "type": "object"
+            },
+            "AdminPassword": {
+              "type": "secureString"
+            },
+            "VirtualMachineSize": {
+              "type": "string"
+            },
+            "Location": {
+              "type": "string"
+            },
+            "WindowsOSVersion": {
+              "type": "string"
+            },
+            "VirtualNetworkID": {
+              "type": "string"
+            },
+            "SubnetName": {
+              "type": "string"
+            },
+            "NicName": {
+              "type": "string"
+            },
+            "VMName": {
+              "type": "string"
+            },
+            "IPAddress": {
+              "type": "string"
+            },
+            "AvailabilitySetID": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-11-01",
+              "name": "[parameters('VMName')]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "securityRules": []
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('NicName')]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig",
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "[parameters('IPAddress')]",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', parameters('VirtualNetworkID'), parameters('SubnetName'))]"
+                      }
+                    }
+                  }
+                ],
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('VMName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('VMName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2019-07-01",
+              "name": "[parameters('VMName')]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('VirtualMachineSize')]"
+                },
+                "osProfile": {
+                  "computerName": "[parameters('VMName')]",
+                  "adminUsername": "[parameters('AdminUserName')]",
+                  "adminPassword": "[parameters('AdminPassword')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "[parameters('WindowsOSVersion')]",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  },
+                  "dataDisks": []
+                },
+                "licenseType": "Windows_Server",
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('NicName'))]"
+                    }
+                  ]
+                },
+                "availabilitySet": {
+                  "id": "[parameters('AvailabilitySetID')]"
+                }
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('NicName'))]"
+              ]
+            },
+            {
+              "condition": "[equals(parameters('JitRules').DeployRules, 1)]",
+              "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
+              "apiVersion": "2020-01-01",
+              "name": "[format('{0}/{1}', parameters('Location'), parameters('VMName'))]",
+              "kind": "Basic",
+              "properties": {
+                "virtualMachines": [
+                  {
+                    "id": "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]",
+                    "ports": [
+                      {
+                        "number": 22,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      },
+                      {
+                        "number": 3389,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      },
+                      {
+                        "number": 5985,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      },
+                      {
+                        "number": 5986,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "domainControllerUS2",
+      "resourceGroup": "[parameters('ResourceGroups').ResourceGroupNameUS]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "VMName": {
+            "value": "[parameters('VirtualMachineTwoParams').VMName]"
+          },
+          "NicName": {
+            "value": "[parameters('VirtualMachineTwoParams').VMName]"
+          },
+          "AdminUserName": {
+            "value": "[parameters('VirtualMachineTwoParams').AdminUserName]"
+          },
+          "AdminPassword": {
+            "value": "[parameters('AdminPassword')]"
+          },
+          "VirtualMachineSize": {
+            "value": "[parameters('VirtualMachineOneParams').VirtualMachineSize]"
+          },
+          "WindowsOSVersion": {
+            "value": "[parameters('VirtualMachineOneParams').WindowsOSVersion]"
+          },
+          "VirtualNetworkID": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.vnetID.value]"
+          },
+          "SubnetName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS'), '2019-10-01').outputs.subnet.value]"
+          },
+          "AvailabilitySetID": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS'), '2019-10-01').outputs.AvailabilitySetID.value]"
+          },
+          "Location": {
+            "value": "[parameters('ResourceGroups').ResourceGroupLocationUS]"
+          },
+          "IPAddress": {
+            "value": "[parameters('VirtualMachineTwoParams').PrivateIPAddress]"
+          },
+          "JitRules": {
+            "value": "[parameters('JitRules')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "12583786105079893547"
+            }
+          },
+          "parameters": {
+            "AdminUserName": {
+              "type": "string"
+            },
+            "JitRules": {
+              "type": "object"
+            },
+            "AdminPassword": {
+              "type": "secureString"
+            },
+            "VirtualMachineSize": {
+              "type": "string"
+            },
+            "Location": {
+              "type": "string"
+            },
+            "WindowsOSVersion": {
+              "type": "string"
+            },
+            "VirtualNetworkID": {
+              "type": "string"
+            },
+            "SubnetName": {
+              "type": "string"
+            },
+            "NicName": {
+              "type": "string"
+            },
+            "VMName": {
+              "type": "string"
+            },
+            "IPAddress": {
+              "type": "string"
+            },
+            "AvailabilitySetID": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-11-01",
+              "name": "[parameters('VMName')]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "securityRules": []
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('NicName')]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig",
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "[parameters('IPAddress')]",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', parameters('VirtualNetworkID'), parameters('SubnetName'))]"
+                      }
+                    }
+                  }
+                ],
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('VMName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('VMName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2019-07-01",
+              "name": "[parameters('VMName')]",
+              "location": "[parameters('Location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('VirtualMachineSize')]"
+                },
+                "osProfile": {
+                  "computerName": "[parameters('VMName')]",
+                  "adminUsername": "[parameters('AdminUserName')]",
+                  "adminPassword": "[parameters('AdminPassword')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "[parameters('WindowsOSVersion')]",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  },
+                  "dataDisks": []
+                },
+                "licenseType": "Windows_Server",
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('NicName'))]"
+                    }
+                  ]
+                },
+                "availabilitySet": {
+                  "id": "[parameters('AvailabilitySetID')]"
+                }
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('NicName'))]"
+              ]
+            },
+            {
+              "condition": "[equals(parameters('JitRules').DeployRules, 1)]",
+              "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
+              "apiVersion": "2020-01-01",
+              "name": "[format('{0}/{1}', parameters('Location'), parameters('VMName'))]",
+              "kind": "Basic",
+              "properties": {
+                "virtualMachines": [
+                  {
+                    "id": "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]",
+                    "ports": [
+                      {
+                        "number": 22,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      },
+                      {
+                        "number": 3389,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      },
+                      {
+                        "number": 5985,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      },
+                      {
+                        "number": 5986,
+                        "protocol": "*",
+                        "allowedSourceAddressPrefixes": [
+                          "[parameters('JitRules').JitSourceIpOne]",
+                          "[parameters('JitRules').JitSourceIpTwo]"
+                        ],
+                        "maxRequestAccessDuration": "PT3H"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('VMName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'availabilitySetUS')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'NetworkingUS')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroups').ResourceGroupNameUS)]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroups').ResourceGroupNameUS), 'Microsoft.Resources/deployments', 'domainControllerUS1')]"
+      ]
+    }
+  ]
+}
