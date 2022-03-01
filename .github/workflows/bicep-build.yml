@@ -26,7 +26,6 @@ jobs:
       - name: Run Bicep build
         run: |
             bicep build main/main.bicep
-            ls -l *.json
 
       - name: Commit files
         run: |
