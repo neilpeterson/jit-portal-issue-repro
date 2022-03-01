@@ -8,6 +8,7 @@ Use deployment button to deploy repro:
 
 With this deployment, two virtual machines are created with the following attributes:
 
+- Both VMs are in the same region / resource group
 - Both are connected to a single VNET and a single subnet
 - A NSG is attached to the subnet
 - A second NSG per VM is attached to the VMs NIC
