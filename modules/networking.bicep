@@ -80,9 +80,9 @@ resource VirtualNetworkSpoke 'Microsoft.Network/virtualNetworks@2020-05-01' = {
         name: ResourceSubnet.subnetName
         properties: {
           addressPrefix: ResourceSubnet.subnetPrefix
-          networkSecurityGroup: {
-            id: NSGVirtualMachines.id
-          }
+          // networkSecurityGroup: {
+          //   id: NSGVirtualMachines.id
+          // }
         }
       }
     ]

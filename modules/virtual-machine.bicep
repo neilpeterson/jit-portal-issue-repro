@@ -85,48 +85,52 @@ resource VirtualMachine 'Microsoft.Compute/virtualMachines@2019-07-01' = {
   }
 }
 
-resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessPolicies@2020-01-01' = {
-  name: '${Location}/${VMName}'
-  kind: 'Basic'
-  properties: {
-    virtualMachines: [
-      {
-        id: VirtualMachine.id
-        ports: [
-          {
-            number: 22
-            protocol: '*'
-            allowedSourceAddressPrefixes: [
-              JitSourceIP
-            ]
-            maxRequestAccessDuration: 'PT3H'
-          }
-          {
-            number: 3389
-            protocol: '*'
-            allowedSourceAddressPrefixes: [
-              JitSourceIP
-            ]
-            maxRequestAccessDuration: 'PT3H'
-          }
-          {
-            number: 5985
-            protocol: '*'
-            allowedSourceAddressPrefixes: [
-              JitSourceIP
-            ]
-            maxRequestAccessDuration: 'PT3H'
-          }
-          {
-            number: 5986
-            protocol: '*'
-            allowedSourceAddressPrefixes: [
-              JitSourceIP
-            ]
-            maxRequestAccessDuration: 'PT3H'
-          }
-        ]
-      }
-    ]
-  }
-}
+// resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessPolicies@2020-01-01' = {
+//   name: '${Location}/${VMName}'
+//   kind: 'Basic'
+//   properties: {
+//     virtualMachines: [
+//       {
+//         id: VirtualMachine.id
+//         ports: [
+//           {
+//             number: 22
+//             protocol: '*'
+//             allowedSourceAddressPrefixes: [
+//               JitSourceIP
+//             ]
+//             maxRequestAccessDuration: 'PT3H'
+//           }
+//           {
+//             number: 3389
+//             protocol: '*'
+//             allowedSourceAddressPrefixes: [
+//               JitSourceIP
+//             ]
+//             maxRequestAccessDuration: 'PT3H'
+//           }
+//           {
+//             number: 5985
+//             protocol: '*'
+//             allowedSourceAddressPrefixes: [
+//               JitSourceIP
+//             ]
+//             maxRequestAccessDuration: 'PT3H'
+//           }
+//           {
+//             number: 5986
+//             protocol: '*'
+//             allowedSourceAddressPrefixes: [
+//               JitSourceIP
+//             ]
+//             maxRequestAccessDuration: 'PT3H'
+//           }
+//         ]
+//       }
+//     ]
+//   }
+//   dependsOn: [
+//     NICVirtualMachine
+//     VirtualMachineNSG
+//   ]
+// }

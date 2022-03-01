@@ -33,6 +33,10 @@ And, the expected allow NSG rule has been created.
 
 ![](./images/jit-nsg-allow.png)
 
+## Other details
+
+I have deployed these tempaltes withouth the JIT rules, and then attempted to enable using PowerSell one at a time. The first one worked great, and then when enabling the second, it works great however the first regressess back towads not showing as JIT enabled in the Azure portal.
+
 ## Conclusion
 
-So while the Azure portal does not show the VM as JIT enabled, it does appear to be. As well, the portal control for requesting access is not present. I have tested both the preview and non-preview portal, which persists across both.
+It seems like this is all working as expected on the back end / provider side. Perhaps this is a portal / UI bug? While we can manage access requests using PowerShell, this is not ideal for everyone on our team.
