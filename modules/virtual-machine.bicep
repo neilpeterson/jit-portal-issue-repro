@@ -1,7 +1,5 @@
 param AdminUserName string
 
-param JitRules object
-
 @secure()
 param AdminPassword string
 param VirtualMachineSize string
@@ -13,6 +11,7 @@ param NicName string
 param VMName string
 param IPAddress string
 param AvailabilitySetID string
+param JitSourceIP string
 
 resource VirtualMachineNSG 'Microsoft.Network/networkSecurityGroups@2019-11-01' = {
   name: VMName
@@ -86,7 +85,7 @@ resource VirtualMachine 'Microsoft.Compute/virtualMachines@2019-07-01' = {
   }
 }
 
-resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessPolicies@2020-01-01' = if (JitRules.DeployRules == 1) {
+resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessPolicies@2020-01-01' = {
   name: '${Location}/${VMName}'
   kind: 'Basic'
   properties: {
@@ -98,8 +97,7 @@ resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessP
             number: 22
             protocol: '*'
             allowedSourceAddressPrefixes: [
-              JitRules.JitSourceIpOne
-              JitRules.JitSourceIpTwo
+              JitSourceIP
             ]
             maxRequestAccessDuration: 'PT3H'
           }
@@ -107,8 +105,7 @@ resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessP
             number: 3389
             protocol: '*'
             allowedSourceAddressPrefixes: [
-              JitRules.JitSourceIpOne
-              JitRules.JitSourceIpTwo
+              JitSourceIP
             ]
             maxRequestAccessDuration: 'PT3H'
           }
@@ -116,8 +113,7 @@ resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessP
             number: 5985
             protocol: '*'
             allowedSourceAddressPrefixes: [
-              JitRules.JitSourceIpOne
-              JitRules.JitSourceIpTwo
+              JitSourceIP
             ]
             maxRequestAccessDuration: 'PT3H'
           }
@@ -125,8 +121,7 @@ resource ManagementPortJITPolicy 'Microsoft.Security/locations/jitNetworkAccessP
             number: 5986
             protocol: '*'
             allowedSourceAddressPrefixes: [
-              JitRules.JitSourceIpOne
-              JitRules.JitSourceIpTwo
+              JitSourceIP
             ]
             maxRequestAccessDuration: 'PT3H'
           }
